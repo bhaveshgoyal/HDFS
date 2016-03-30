@@ -100,7 +100,31 @@ public class Client extends UnicastRemoteObject
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-	}	
+	}
+
+	public static void getBlockLocations(int[] array)
+         {
+             try{
+                 BlockLocationRequest.Builder blc = BlockLocationRequest.newBuilder();
+                 for(int i=0;i<array.length;i++)
+                 {
+                        blc.addBlockNums(array[i]);
+                 }
+                 BlockLocationResponse blc_response = BlockLocationResponse.parseFrom(namenode.getBlockLocations(blc.build().toByteArray()));
+                 for(BlockLocations block: blc_response.getBlockLocationsList())
+                 {
+                        System.out.println("Found Location for Block Number: " + block.getBlockNumber());
+                        for(DataNodeLocation dnc: block.getLocationsList())
+                        {
+                                System.out.print(dnc.getIp() + " ");
+                        }
+                 }
+             }
+             catch (Exception e)
+             {
+                System.out.println("Error: Something went bad while recieving Block Locations");
+             }
+         }	
 		
 	public static void main(String args[]){
 		try{	

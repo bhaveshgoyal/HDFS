@@ -12,7 +12,7 @@ public interface INameNode extends Remote{
 	
 	/* BlockLocationResponse getBlockLocations(BlockLocationRequest) */
 	/* Method to get block locations given an array of block numbers */
-//	byte[] getBlockLocations(byte[] inp ) throws RemoteException;
+	byte[] getBlockLocations(byte[] inp ) throws RemoteException;
 	
 	/* AssignBlockResponse assignBlock(AssignBlockRequest) */
 	/* Method to assign a block which will return the replicated block locations */
@@ -28,7 +28,7 @@ public interface INameNode extends Remote{
 	
 	/* BlockReportResponse blockReport(BlockReportRequest) */
 	/* Get the status for blocks */
-//	byte[] blockReport(byte[] inp ) throws RemoteException;
+	byte[] blockReport(byte[] inp ) throws RemoteException;
 	
 	/* HeartBeatResponse heartBeat(HeartBeatRequest) */
 //	/* Heartbeat messages between NameNode and DataNode */
