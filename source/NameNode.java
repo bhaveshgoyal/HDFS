@@ -3,6 +3,7 @@ import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import com.bagl.protobuf.Hdfs.*;
 
 public class NameNode extends UnicastRemoteObject implements INameNode
 {	
@@ -10,29 +11,26 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 	static int port = 1099;
 	public NameNode() throws RemoteException {}
 
-	public String sayHello() {return "Hello World";}
-
-	public byte[] heartbeat(byte[] array) {
+	public byte[] heartBeat(byte[] array) {
 	
     	try{
-		heartBeatRequest hb = heartBeatRequest.parseFrom(array);
+		HeartBeatRequest hb = HeartBeatRequest.parseFrom(array);
 	     	int node_num = hb.getId();
              	System.out.println("Recieved HeartBeat form: " + node_num);
-                heartBeatResponse.Builder hb_response = heartBeatResponse.newBuilder();
+                HeartBeatResponse.Builder hb_response = HeartBeatResponse.newBuilder();
                 hb_response.setStatus(1);
-                heartBeatResponse array_response = hb_response.build();
+                HeartBeatResponse array_response = hb_response.build();
                 return array_response.toByteArray();
-                catch (Exception e)
+	}
+        catch (Exception e)
 		{
-			System.out.println("Error sending the heartbeat response");
-                	heartBeatResponse.Builder hb_response = heartBeatResponse.newBuilder();
+			System.out.println("Error sending the Heartbeat response");
+                	HeartBeatResponse.Builder hb_response = HeartBeatResponse.newBuilder();
                 	hb_response.setStatus(0);
-                	heartBeatResponse array_response = hb_response.build();
+                	HeartBeatResponse array_response = hb_response.build();
                 	return array_response.toByteArray();
 		}
         }
-
-	}
 	public static void main(String args[]){
 		try{
 			NameNode obj = new NameNode();

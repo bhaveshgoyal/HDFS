@@ -3,5 +3,5 @@ compile:
 
 protobuf:
 	protoc -I=./ --java_out=./source ./hdfs.proto
-	javac -cp ./libs/protobuf-java-2.6.1.jar -d ./bin source/Hdfs.java
+	javac -cp ./libs/protobuf-java-2.6.1.jar -d ./bin source/com/bagl/protobuf/Hdfs.java
 
