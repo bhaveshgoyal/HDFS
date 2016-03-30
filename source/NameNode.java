@@ -12,6 +12,27 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 
 	public String sayHello() {return "Hello World";}
 
+	public byte[] heartbeat(byte[] array) {
+	
+    	try{
+		heartBeatRequest hb = heartBeatRequest.parseFrom(array);
+	     	int node_num = hb.getId();
+             	System.out.println("Recieved HeartBeat form: " + node_num);
+                heartBeatResponse.Builder hb_response = heartBeatResponse.newBuilder();
+                hb_response.setStatus(1);
+                heartBeatResponse array_response = hb_response.build();
+                return array_response.toByteArray();
+                catch (Exception e)
+		{
+			System.out.println("Error sending the heartbeat response");
+                	heartBeatResponse.Builder hb_response = heartBeatResponse.newBuilder();
+                	hb_response.setStatus(0);
+                	heartBeatResponse array_response = hb_response.build();
+                	return array_response.toByteArray();
+		}
+        }
+
+	}
 	public static void main(String args[]){
 		try{
 			NameNode obj = new NameNode();
