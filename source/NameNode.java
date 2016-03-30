@@ -107,6 +107,37 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 		}
 	return resp.toByteArray();	
 	}
+ 	
+	public byte[] list(byte array[] ){
+                ListFilesResponse.Builder lfr_response = ListFilesResponse.newBuilder();
+                try{
+                        ListFilesRequest lfr = ListFilesRequest.parseFrom(array);
+                        String dir_name = lfr.getDirName();
+                        String file_name = dir_name.concat(".txt");
+                        lfr_response.setStatus(1);
+                        File file = new File(file_name);
+                        FileReader fileReader = new FileReader(file);
+                        BufferedReader bufferedReader = new BufferedReader(fileReader);
+                        StringBuffer stringBuffer = new StringBuffer();
+                        String line;
+                        line = bufferedReader.readLine();
+                        while(line!=null)
+                        {
+                                System.out.println("Reading Directory.. Found: " + line);
+                                String[] temp;
+                                temp = line.split(" ");
+                                lfr_response.addFileNames(temp[0]);
+                                line = bufferedReader.readLine();
+                        }
+                        return lfr_response.build().toByteArray();
+                }
+                catch (Exception e){
+                        System.out.println("Error: Something went bad while reading the line " + e.getMessage());
+                	lfr_response.setStatus(-1);
+			e.printStackTrace();
+                }
+                return lfr_response.build().toByteArray();
+        }
 	public byte[] heartBeat(byte[] array) {
 	
     	try{

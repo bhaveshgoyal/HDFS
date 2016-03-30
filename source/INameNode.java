@@ -20,7 +20,7 @@ public interface INameNode extends Remote{
 	
 	/* ListFilesResponse list(ListFilesRequest) */
 	/* List the file names (no directories needed for current implementation */
-//	byte[] list(byte[] inp ) throws RemoteException;
+	byte[] list(byte[] inp ) throws RemoteException;
 	
 	/*
 		Datanode <-> Namenode interaction methods
