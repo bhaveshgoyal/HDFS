@@ -9,31 +9,27 @@ public class DataNode
 	static String host = "54.254.144.108";
 	static Registry registry;
 	static int port = 1099;
-	static INameNode obj;
+	static INameNode namenode;
 	static int HB_TIME = 2000;
+	static int DN_ID;
 	public static void main(String args[]){
-		
-		String msg = "hello";
-		
+		DN_ID  = Integer.parseInt(args[0]);		
 		try{
-			System.out.println("hostname set");
+			System.out.println("DataNode " + DN_ID + " ready...");
 			registry = LocateRegistry.getRegistry(host, port);
 			final String[] names = registry.list();
-			for (int i=0;i<names.length;i++)
-				System.out.println(names[i]);
-			obj = (INameNode)Naming.lookup("//" + host + "/" + "NameNode");
-//			INameNode obj = (INameNode)registry.lookup("NffameNode");
-			System.out.println("lookup complete");
+			namenode = (INameNode)Naming.lookup("//" + host + "/" + "NameNode");
+
 			Thread Heartbeat = new Thread(new Runnable(){
 				
 				@Override
 				public void run(){
 					while(true){
-					HeartBeatRequest.Builder hb = HeartBeatRequest.newBuilder();
-                       		 	hb.setId(1);
+					HeartBeatRequest.Builder hb = HeartBeatRequest.newBuilder().setId(DN_ID);
 					try{
                        	 		HeartBeatRequest array = hb.build();
-                       			HeartBeatResponse hb_response = HeartBeatResponse.parseFrom(obj.heartBeat(array.toByteArray()));
+                       			HeartBeatResponse hb_response = HeartBeatResponse.parseFrom(namenode.heartBeat(array.toByteArray()));
+					System.out.println("Heartbeat acknowleged by NameNode with status: " + hb_response.getStatus());
 					Thread.sleep(HB_TIME);
 					}
 					catch (Exception e){

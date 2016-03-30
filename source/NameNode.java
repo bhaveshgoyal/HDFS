@@ -4,19 +4,115 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import com.bagl.protobuf.Hdfs.*;
+import java.io.*;
+import java.util.*;
 
 public class NameNode extends UnicastRemoteObject implements INameNode
 {	
 	static String host = "54.254.144.108";
+	static String DN_CONFIG = "../dn.locations";
 	static int port = 1099;
-	public NameNode() throws RemoteException {}
+	static int f_handle = 1;
+	static int BLOCK_NUM = 1;
+	private int CASCADE_NUM = 2;
+	private HashMap<String, List<String>> dn_map;
+	private HashMap<String, Integer> handle_map;
+	static Random random_gen;
 
+	public NameNode() throws RemoteException {
+		random_gen = new Random();
+		handle_map = new HashMap<String, Integer>();
+		dn_map = new HashMap<String, List<String>>();
+	}
+
+	public byte[] openFile(byte[] array){
+		OpenFileResponse resp = null;
+		int handle = -1;
+		try {
+		BLOCK_NUM = 1;
+		OpenFileRequest filerequest = OpenFileRequest.parseFrom(array);
+		if (filerequest.getForRead() == false){
+			handle = f_handle;
+			OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
+			file_resp.setHandle(handle);
+			handle_map.put(filerequest.getFileName(), handle);
+			file_resp.setStatus(1);
+			resp = file_resp.build();
+			f_handle += 1;
+		}
+		}
+		catch (Exception e){
+		System.out.println("Error parsing file Open Request: " + e.getMessage());
+		OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
+		file_resp.setHandle(handle);
+		file_resp.setStatus(-1);
+		resp = file_resp.build();
+		e.printStackTrace();
+		}
+		return resp.toByteArray();
+		
+	}
+	public byte[] assignBlock(byte[] array){
+		AssignBlockResponse resp = null;
+		try{
+		AssignBlockRequest assignreq = AssignBlockRequest.parseFrom(array);
+		if (assignreq.getHandle() < 0){
+			System.out.println("Error: Assigning Block. Invalid File Handle");
+			AssignBlockResponse.Builder assignresp = AssignBlockResponse.newBuilder();
+			assignresp.setStatus(-1);
+			resp = assignresp.build();
+		}
+		else{
+         		File file = new File(DN_CONFIG);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String line = bufferedReader.readLine();
+			int dnodes_num = 1;
+			while (line != null){
+				List<String> dn_info = new ArrayList<String>();
+				dn_info.add(line.split(" ")[1]);
+				dn_info.add(line.split(" ")[2]);
+				dn_map.put(line.split(" ")[0], dn_info);
+				System.out.println("Found DataNode Bound at: " + ((List)dn_map.get(line.split(" ")[0])).get(0) + ":" + ((List)dn_map.get(line.split(" ")[0])).get(1));
+				line = bufferedReader.readLine();
+				dnodes_num++;
+			}
+			dnodes_num--;
+			BlockLocations.Builder bloc_build= BlockLocations.newBuilder();
+			bloc_build.setBlockNumber(BLOCK_NUM++);
+			for(int i=0;i<CASCADE_NUM;i++){
+				int idx = random_gen.nextInt(dnodes_num) + 1;
+				DataNodeLocation.Builder dnode_build = DataNodeLocation.newBuilder();
+				dnode_build.setIp(((List)dn_map.get(idx + "")).get(0) + "");
+				dnode_build.setPort(Integer.parseInt(((List)dn_map.get(idx + "")).get(1) + ""));
+				bloc_build.addLocations(dnode_build.build());	
+			}
+			AssignBlockResponse.Builder assignresp = AssignBlockResponse.newBuilder();
+			assignresp.setStatus(1);
+			assignresp.setNewBlock(bloc_build.build());
+			resp = assignresp.build();
+			/*List<String> datanodes = new ArrayList<String>();
+			for (String entry : boundNames) {
+    				if (entry.matches(regex))
+      					datanodes.add(entry);
+  			}*/
+		}
+		}
+		catch (Exception e){
+			AssignBlockResponse.Builder assignresp = AssignBlockResponse.newBuilder();
+			assignresp.setStatus(-1);
+			resp = assignresp.build();
+			System.out.println("Error Assigning Block: " + e.getMessage());
+			e.printStackTrace();	
+		}
+	return resp.toByteArray();	
+	}
 	public byte[] heartBeat(byte[] array) {
 	
     	try{
 		HeartBeatRequest hb = HeartBeatRequest.parseFrom(array);
 	     	int node_num = hb.getId();
-             	System.out.println("Recieved HeartBeat form: " + node_num);
+             	System.out.println("Recieved HeartBeat from: " + node_num);
                 HeartBeatResponse.Builder hb_response = HeartBeatResponse.newBuilder();
                 hb_response.setStatus(1);
                 HeartBeatResponse array_response = hb_response.build();
@@ -35,10 +131,9 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 		try{
 			NameNode obj = new NameNode();
 			Naming.rebind("NameNode", obj);
-			Naming.rebind("NameNode2", obj);
 		}
 		catch (Exception e){
-			System.out.println("err" + e.getMessage());
+			System.out.println("NameNode err" + e.getMessage());
 			e.printStackTrace();
 		}
 
