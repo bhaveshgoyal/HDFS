@@ -17,12 +17,14 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 	private int CASCADE_NUM = 2;
 	private HashMap<String, List<String>> dn_map;
 	private HashMap<String, Integer> handle_map;
+	private HashMap<Integer, ArrayList<Integer>> block_list;
 	static Random random_gen;
 
 	public NameNode() throws RemoteException {
 		random_gen = new Random();
 		handle_map = new HashMap<String, Integer>();
 		dn_map = new HashMap<String, List<String>>();
+		block_list = new HashMap<Integer, ArrayList<Integer>>();
 	}
 
 	public byte[] openFile(byte[] array){
@@ -138,6 +140,48 @@ public class NameNode extends UnicastRemoteObject implements INameNode
                 }
                 return lfr_response.build().toByteArray();
         }
+	
+	public byte[] blockReport(byte array[])
+	{	
+		
+		BlockReportResponse.Builder brr_response = BlockReportResponse.newBuilder();
+		try{
+			BlockReportRequest brr = BlockReportRequest.parseFrom(array);
+ 			brr_response.addStatus(1);
+			int node_id = brr.getId();
+			System.out.println("Block Report Recieved from DataNode: " + node_id + ": " + brr.getLocation().getIp());
+			for(int block_id: brr.getBlockNumbersList()){
+                		System.out.println(block_id);
+ 				ArrayList<Integer> temp = new ArrayList<Integer>();
+				if(block_list.containsKey(block_id))
+				{
+					temp = block_list.get(block_id);
+				}
+				if(!temp.contains(node_id))
+				{
+					temp.add(node_id);
+				}
+				block_list.put(block_id,temp);
+				
+                	}
+			if(!dn_map.containsKey(node_id))
+			{	
+				List<String> dn_info = new ArrayList<String>();
+				dn_info.add(brr.getLocation().getIp());
+				dn_info.add(brr.getLocation().getPort() + "");
+				dn_map.put(node_id + "", dn_info);	
+			}
+			return brr_response.build().toByteArray();	
+		}
+
+  		catch(Exception e)
+		{
+			brr_response.addStatus(-1);
+			System.out.println("Error: Something went Bad while Fetching Block Report " + e.getMessage());
+			e.printStackTrace();
+		}
+		return brr_response.build().toByteArray();
+	}
 	public byte[] heartBeat(byte[] array) {
 	
     	try{
