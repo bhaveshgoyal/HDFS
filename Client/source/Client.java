@@ -106,8 +106,9 @@ public class Client extends UnicastRemoteObject
 			}
 			inputStream.close();
 			return;
-		} catch (IOException exception) {
-			exception.printStackTrace();
+		} catch (Exception e) {
+			System.out.println("Error: Could not write File to HDFS: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 

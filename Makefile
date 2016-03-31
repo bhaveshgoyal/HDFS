@@ -18,7 +18,7 @@ nn-trigger:
 	java  -cp .:./libs/protobuf-java-2.6.1.jar:./NameNode/bin NameNode
 
 dn-trigger:
-	java  -cp .:./libs/protobuf-java-2.6.1.jar:./DataNode/bin DataNode $(((RANDOM % 50) + 1))
+	java  -cp .:./libs/protobuf-java-2.6.1.jar:./DataNode/bin DataNode $$(((RANDOM % 50) + 1))
 
 
 client-trigger:

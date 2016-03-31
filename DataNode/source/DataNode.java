@@ -3,11 +3,13 @@ import java.rmi.Naming;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import com.bagl.protobuf.Hdfs.*;
 import java.io.*;
 import java.util.*;
 import com.google.protobuf.ByteString;
-public class DataNode implements IDataNode
+
+public class DataNode extends UnicastRemoteObject implements IDataNode
 {	
 	static String host = "54.254.144.108";
 	static Registry registry;
