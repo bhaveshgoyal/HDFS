@@ -88,8 +88,9 @@ public class Client extends UnicastRemoteObject
 				if (assignresp.getStatus() < 0)
 					System.out.println("Error Allocating DataNode Locations");
 				else{
-                 			WriteBlockRequest.Builder write_req = WriteBlockRequest.newBuilder();
-		 			write_req.addData(byteChunkPart)
+                 	WriteBlockRequest.Builder write_req = WriteBlockRequest.newBuilder();
+		 			write_req.addData(byteChunkPart);
+                    write_req.setBlockInfo(assignresp.getNewBlock());
 					System.out.println("Recieved Block Allocations for: " + assignresp.getNewBlock().getBlockNumber());
 					for(DataNodeLocation dnode : assignresp.getNewBlock().getLocationsList()){
 						System.out.println("DataNode " + dnode.getIp() + ":" + dnode.getPort());
