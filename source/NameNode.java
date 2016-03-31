@@ -140,6 +140,42 @@ public class NameNode extends UnicastRemoteObject implements INameNode
                 }
                 return lfr_response.build().toByteArray();
         }
+	public byte[] getBlockLocations(byte array[])
+	{
+            BlockLocationResponse.Builder blc_response = null;
+            try{
+            BlockLocationRequest blc = BlockLocationRequest.parseFrom(array);
+            ArrayList<Integer> block_list_temp = new ArrayList<Integer>();
+	    for(int block_id: blc.getBlockNumsList()){
+                System.out.println("Request recieved for Block Number" + block_id);
+                block_list_temp.add(block_id);
+	    }
+         	blc_response = BlockLocationResponse.newBuilder();
+                blc_response.setStatus(1);   
+			for(int j=0;j<block_list_temp.size();j++)
+			{
+				BlockLocations.Builder block = BlockLocations.newBuilder();
+                                block.setBlockNumber(block_list_temp.get(j));
+				for(int k = 0;k< block_list.get(block_list_temp.get(j)).size();k++)
+				{
+					ArrayList<Integer> temp = block_list.get(block_list_temp.get(j));
+					DataNodeLocation.Builder dnc = DataNodeLocation.newBuilder();
+					dnc.setIp(dn_map.get(temp.get(k) + "").get(0));
+					dnc.setPort(Integer.parseInt(dn_map.get(temp.get(k) + "").get(1)));
+					block.addLocations(dnc.build());
+				}
+				blc_response.addBlockLocations(block.build());
+			}		
+			return blc_response.build().toByteArray();
+             }	    
+            catch (Exception e){
+                blc_response.setStatus(-1);   
+		System.out.println("Error: Something went wrong while sending Block Locations" + e.getMessage());
+                e.printStackTrace();
+		System.out.println("something wrong");
+	    }
+	    return blc_response.build().toByteArray();
+	}
 	
 	public byte[] blockReport(byte array[])
 	{	
