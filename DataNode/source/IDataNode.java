@@ -5,7 +5,7 @@ public interface IDataNode extends Remote{
 
 	/* ReadBlockResponse readBlock(ReadBlockRequest)) */
 	/* Method to read data from any block given block-number */
-//	byte[] readBlock(byte[] inp) throws RemoteException;
+	byte[] readBlock(byte[] inp) throws RemoteException;
 	
 	/* WriteBlockResponse writeBlock(WriteBlockRequest) */
 	/* Method to write data to a specific block */

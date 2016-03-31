@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import com.bagl.protobuf.Hdfs.*;
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import com.google.protobuf.ByteString;
 
@@ -16,6 +17,7 @@ public class DataNode extends UnicastRemoteObject implements IDataNode
 	static int port = 1099;
     	static int block_num;
 	static INameNode namenode;
+	static int BLOCK_SIZE = 32*1024*1024;
 	static int HB_TIME = 2000;
 	static int DN_ID;
 	
@@ -98,7 +100,35 @@ public class DataNode extends UnicastRemoteObject implements IDataNode
         return resp.setStatus(-1).build().toByteArray();
 
     }
-    
+   public byte[] readBlock(byte array[])
+        {
+                byte[] fileArray;
+                try{
+                ReadBlockRequest rbr = ReadBlockRequest.parseFrom(array);
+		ReadBlockResponse.Builder rbr_build = ReadBlockResponse.newBuilder();
+                int block_num = rbr.getBlockNumber();
+                String file_name = "Blocks/" + String.valueOf(block_num);
+                Path path = Paths.get(file_name);
+		FileInputStream inputstream = new FileInputStream(file_name);
+                fileArray = Files.readAllBytes(path);
+		int temp;
+		byte[] dat = new byte[BLOCK_SIZE];
+		rbr_build.setStatus(1);
+		while((temp = inputstream.read(dat)) != -1){
+		ByteString data = ByteString.copyFrom(dat);
+		rbr_build.addData(data);
+	 	}
+                return rbr_build.build().toByteArray();
+                }
+                catch(Exception e)
+                {
+			ReadBlockResponse.Builder rbr_build = ReadBlockResponse.newBuilder();
+			rbr_build.setStatus(-1);
+			System.out.println("Error: Could not Read Blocks" + e.getMessage());
+                	e.printStackTrace();
+			return rbr_build.build().toByteArray();
+                }
+        } 
     
 	public static void main(String args[]){
 		DN_ID  = Integer.parseInt(args[0]);		

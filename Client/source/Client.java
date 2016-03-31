@@ -112,7 +112,7 @@ public class Client extends UnicastRemoteObject
 		}
 	}
 
-	public static void getBlockLocations(int[] array)
+	public static byte[] getBlockLocations(int[] array)
          {
              try{
                  BlockLocationRequest.Builder blc = BlockLocationRequest.newBuilder();
@@ -120,22 +120,81 @@ public class Client extends UnicastRemoteObject
                  {
                         blc.addBlockNums(array[i]);
                  }
-                 BlockLocationResponse blc_response = BlockLocationResponse.parseFrom(namenode.getBlockLocations(blc.build().toByteArray()));
-		 for(BlockLocations block: blc_response.getBlockLocationsList())
-                 {
-                        System.out.println("Found Location for Block Number: " + block.getBlockNumber());
-                        for(DataNodeLocation dnc: block.getLocationsList())
-                        {
-                                System.out.print(dnc.getIp() + " ");
-                        }
-                 }
+                 return namenode.getBlockLocations(blc.build().toByteArray());
              }
              catch (Exception e)
              {
-                System.out.println("Error: Something went bad while recieving Block Locations");
+                System.out.println("Error: Something went bad while recieving Block Locations: " + e.getMessage());
+		e.printStackTrace();
              }
+	    return new byte[] {1};
          }	
-		
+	
+	public static void getFile(String file_name)
+         {
+		try{
+		BufferedReader br = new BufferedReader(new FileReader("file_config.txt"));
+		String line;
+		int status = 0;
+		int num_blocks = 0;
+		int[] block_list = new int[1];
+		while ((line = br.readLine()) != null) {
+		System.out.println(line.length());
+		System.out.println(file_name.length());
+		if(status == 2)
+		{
+			block_list[(block_list.length)-num_blocks] = Integer.parseInt(line.split(" ")[0]);
+			num_blocks = num_blocks-1;
+			if(num_blocks==0)
+			{
+				break;
+			}
+		}
+		if(status == 1)
+		{
+			num_blocks = Integer.parseInt(line.split(" ")[0]);
+			block_list = new int[num_blocks];
+			status = 2;
+		}
+       		if(line.equals(file_name))
+		{
+			System.out.println(line.split(" ")[0]);
+			System.out.println(file_name);
+			status = 1;			
+		}	
+    		}
+		BufferedWriter out = null;
+    		FileWriter fstream = new FileWriter(file_name,true); //true tells to append data.
+    		out = new BufferedWriter(fstream);
+ 		BlockLocationResponse blc_response = BlockLocationResponse.parseFrom(getBlockLocations(block_list));
+		for(BlockLocations block: blc_response.getBlockLocationsList())
+                 {
+                        System.out.println(block.getBlockNumber());
+                        for(DataNodeLocation dnc: block.getLocationsList())
+                        {
+                                System.out.println(dnc.getIp());                      
+                 
+                		IDataNode obj = (IDataNode)Naming.lookup("//" +dnc.getIp() + "/" + "DataNode");
+                		ReadBlockRequest.Builder rbr = ReadBlockRequest.newBuilder();
+                		rbr.setBlockNumber(block.getBlockNumber());
+				
+                		ReadBlockResponse read_resp = ReadBlockResponse.parseFrom(obj.readBlock(rbr.build().toByteArray()));
+				if (read_resp.getStatus() < 0)
+					System.out.println("Error: Something went Bad while fetching files from HDFS");
+				else{
+				System.out.println(new String(read_resp.getData(0).toByteArray(), "UTF-8"));
+				out.write(new String(read_resp.getData(0).toByteArray(), "UTF-8"));
+				}
+			}
+		}
+		out.close();
+		}
+		catch(Exception e){
+			System.out.println("Eror: Something went wrong while reading HDFS file: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+        }
 	public static void main(String args[]){
 		try{	
 			namenode = (INameNode)Naming.lookup("//" + nn_host + "/NameNode");
