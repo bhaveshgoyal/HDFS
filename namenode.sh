@@ -1,3 +1,5 @@
-javac  -cp .:./libs/protobuf-java-2.6.1.jar:./NameNode/source -d ./NameNode/bin ./NameNode/source/NameNode.java
-java  -cp .:./libs/protobuf-java-2.6.1.jar:./NameNode/bin NameNode
-
+echo "Compiling NameNode source..."
+make nn-compile
+echo "Compilation Successful"
+echo "Triggering NameNode..."
+make nn-trigger

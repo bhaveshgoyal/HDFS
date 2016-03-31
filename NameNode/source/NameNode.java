@@ -239,7 +239,8 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 		}
         }
 	public static void main(String args[]){
-		try{
+		try{	
+			System.out.prinln("NameNode Server Running running@" + host + "...");
 			NameNode obj = new NameNode();
 			Naming.rebind("NameNode", obj);
 		}
