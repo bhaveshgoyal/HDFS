@@ -90,10 +90,16 @@ public class Client extends UnicastRemoteObject
 				else{
                  	WriteBlockRequest.Builder write_req = WriteBlockRequest.newBuilder();
 		 			write_req.addData(byteChunkPart);
-                    write_req.setBlockInfo(assignresp.getNewBlock());
+                    write_req.setBlockInfo(assignresp.getNewBlock()); 
 					System.out.println("Recieved Block Allocations for: " + assignresp.getNewBlock().getBlockNumber());
 					for(DataNodeLocation dnode : assignresp.getNewBlock().getLocationsList()){
-						System.out.println("DataNode " + dnode.getIp() + ":" + dnode.getPort());
+						System.out.println("Sending Blocks to DataNode " + dnode.getIp() + ":" + dnode.getPort());
+                        IDataNode datanode = (IDataNode)Naming.lookup("//" + dnode.getIp() + "/DataNode");
+                        WriteBlockResponse resp = WriteBlockResponse.parseFrom(datanode.writeBlock(write_req.build().toByteArray()));
+                        if (resp.getStatus() < 0)
+                            System.out.println("Error: Could not send Block Information to DataNode@: " + dnode.getIp());
+                        else
+                            System.out.println("Successfully Sent Blocks to DataNode@: " + dnode.getIp());
 					}
 				}
 				byteChunkPart = null;
