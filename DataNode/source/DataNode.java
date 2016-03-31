@@ -100,7 +100,8 @@ public class DataNode implements IDataNode
 			registry = LocateRegistry.getRegistry(host, port);
 			final String[] names = registry.list();
 			namenode = (INameNode)Naming.lookup("//" + host + "/" + "NameNode");
-
+            DataNode obj = new DataNode();
+            Naming.rebind("DataNode", obj);
 			Thread Heartbeat = new Thread(new Runnable(){
 				
 				@Override
