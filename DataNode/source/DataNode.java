@@ -14,10 +14,12 @@ public class DataNode extends UnicastRemoteObject implements IDataNode
 	static String host = "54.254.144.108";
 	static Registry registry;
 	static int port = 1099;
-    static int block_num;
+    	static int block_num;
 	static INameNode namenode;
 	static int HB_TIME = 2000;
 	static int DN_ID;
+	
+	public DataNode() throws RemoteException{}	
 	
 	public static class BlockReport extends Thread
 	 {
