@@ -10,7 +10,7 @@ import java.util.*;
 public class NameNode extends UnicastRemoteObject implements INameNode
 {	
 	static String host = "54.254.144.108";
-	static String DN_CONFIG = "../dn.locations";
+	static String DN_CONFIG = "./dn.locations";
 	static int port = 1099;
 	static int f_handle = 1;
 	static int BLOCK_NUM = 1;
