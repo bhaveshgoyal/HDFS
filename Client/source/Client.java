@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
 import com.bagl.protobuf.Hdfs.*;
-
+import com.google.protobuf.ByteString;
 public class Client extends UnicastRemoteObject
 {	
 	static String nn_host = "54.254.144.108";	
@@ -89,7 +89,7 @@ public class Client extends UnicastRemoteObject
 					System.out.println("Error Allocating DataNode Locations");
 				else{
                  	WriteBlockRequest.Builder write_req = WriteBlockRequest.newBuilder();
-		 			write_req.addData(byteChunkPart);
+		 			write_req.addData(ByteString.copyFrom(byteChunkPart));
                     write_req.setBlockInfo(assignresp.getNewBlock()); 
 					System.out.println("Recieved Block Allocations for: " + assignresp.getNewBlock().getBlockNumber());
 					for(DataNodeLocation dnode : assignresp.getNewBlock().getLocationsList()){

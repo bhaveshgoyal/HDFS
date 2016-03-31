@@ -5,6 +5,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
 import com.bagl.protobuf.Hdfs.*;
 import java.io.*;
+import java.util.*;
+import com.google.protobuf.ByteString;
 public class DataNode implements IDataNode
 {	
 	static String host = "54.254.144.108";
@@ -58,38 +60,39 @@ public class DataNode implements IDataNode
 		}
 	}
 	}
-    byte[] writeBlock(byte[] inp) throws RemoteException{
-    WriteBlockResponse resp = null;
+    public byte[] writeBlock(byte[] inp) throws RemoteException{
     try{
+    	    WriteBlockResponse.Builder resp = WriteBlockResponse.newBuilder();
             File dir = new File("Blocks");
-            WriteBlockRequest write_req = Hdfs.WriteBlockRequest.parseFrom(inp);
+            WriteBlockRequest write_req = WriteBlockRequest.parseFrom(inp);
 
 
             block_num = write_req.getBlockInfo().getBlockNumber();
-            File blockFile = new File(dir, String.valueOf(blockNum));
+            File blockFile = new File(dir, String.valueOf(block_num));
             FileOutputStream fos = new FileOutputStream(blockFile);
 
-            List<ByteString> dataString = writeBlockRequest.getDataList();
+            List<ByteString> dataString = write_req.getDataList();
             for(ByteString byteString : dataString)
                 fos.write(byteString.toByteArray());
 
             fos.close();
-
             File report = new File("BlockReport");
             FileWriter fw = new FileWriter(report.getName(), true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(Integer.toString(blockNum));
+            bw.write(Integer.toString(block_num));
             bw.newLine();
             bw.close();
             return resp.setStatus(1).build().toByteArray();
             
         } catch( Exception e) {
+    	    WriteBlockResponse.Builder resp = WriteBlockResponse.newBuilder();
             System.out.println("Error: Could not write recieved Block" + e.getMessage());
             resp.setStatus(-1);
             e.printStackTrace();
         }
+    	WriteBlockResponse.Builder resp = WriteBlockResponse.newBuilder();
+        return resp.setStatus(-1).build().toByteArray();
 
-        return resp.build().toByteArray(); 
     }
     
     
