@@ -9,7 +9,7 @@ import java.util.*;
 
 public class NameNode extends UnicastRemoteObject implements INameNode
 {	
-	static String host = "54.254.144.108";
+	static String host = "54.169.52.137";
 	static String DN_CONFIG = "./dn.locations";
 	static int port = 1099;
 	static int f_handle = 1;
@@ -75,14 +75,15 @@ public class NameNode extends UnicastRemoteObject implements INameNode
             File config_report = new File("file_config");
             FileWriter write_file = new FileWriter("file_config", true);
             BufferedWriter buffer = new BufferedWriter(write_file);
-            String fname = (String)handle_map.get(closereq.getHandle());
+            String fname = handle_map.get(closereq.getHandle());
             List<Integer> blocks = file_blocks_map.get(fname);
 
             CloseFileResponse.Builder closeresp = CloseFileResponse.newBuilder();
             buffer.write(fname);
             buffer.newLine();
-            buffer.write(blocks.size());
-            for(int i : blocks) {
+            buffer.write(Integer.toString(blocks.size()));
+            buffer.newLine();
+	    for(int i : blocks) {
                 buffer.write(Integer.toString(i));
                 buffer.newLine();
             }
@@ -304,6 +305,7 @@ public class NameNode extends UnicastRemoteObject implements INameNode
                 int total_blocks;
                 fname = line;
                 total_blocks = Integer.parseInt(buffer.readLine());
+		BLOCK_NUM += total_blocks;
                 ArrayList<Integer> blocks = new ArrayList<Integer>();
                 for(int i=0;i<total_blocks;i++)
                     blocks.add(Integer.parseInt(buffer.readLine()));

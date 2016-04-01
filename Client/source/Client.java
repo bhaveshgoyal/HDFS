@@ -9,7 +9,7 @@ import com.bagl.protobuf.Hdfs.*;
 import com.google.protobuf.ByteString;
 public class Client extends UnicastRemoteObject
 {	
-	static String nn_host = "54.254.144.108";	
+	static String nn_host = "54.169.52.137";	
 	static INameNode namenode;
 	static int BLOCK_SIZE = 32000000;
 	public Client() throws RemoteException {}
@@ -162,8 +162,6 @@ public class Client extends UnicastRemoteObject
 		int num_blocks = 0;
 		int[] block_list = new int[1];
 		while ((line = br.readLine()) != null) {
-		System.out.println(line.length());
-		System.out.println(file_name.length());
 		if(status == 2)
 		{
 			block_list[(block_list.length)-num_blocks] = Integer.parseInt(line.split(" ")[0]);
@@ -181,8 +179,7 @@ public class Client extends UnicastRemoteObject
 		}
        		if(line.equals(file_name))
 		{
-			System.out.println(line.split(" ")[0]);
-			System.out.println(file_name);
+			System.out.println("Found file: " + file_name);
 			status = 1;			
 		}	
     		}
@@ -192,12 +189,9 @@ public class Client extends UnicastRemoteObject
  		BlockLocationResponse blc_response = BlockLocationResponse.parseFrom(getBlockLocations(block_list));
 		for(BlockLocations block: blc_response.getBlockLocationsList())
                  {
-                        System.out.println(block.getBlockNumber());
                         for(DataNodeLocation dnc: block.getLocationsList())
-                        {
-                                System.out.println(dnc.getIp());                      
-                 
-                		IDataNode obj = (IDataNode)Naming.lookup("//" +dnc.getIp() + "/" + "DataNode");
+                        { 
+                		IDataNode obj = (IDataNode)Naming.lookup("//" +dnc.getIp() + "/DataNode");
                 		ReadBlockRequest.Builder rbr = ReadBlockRequest.newBuilder();
                 		rbr.setBlockNumber(block.getBlockNumber());
 				
@@ -205,7 +199,6 @@ public class Client extends UnicastRemoteObject
 				if (read_resp.getStatus() < 0)
 					System.out.println("Error: Something went Bad while fetching files from HDFS");
 				else{
-				System.out.println(new String(read_resp.getData(0).toByteArray(), "UTF-8"));
 				out.write(new String(read_resp.getData(0).toByteArray(), "UTF-8"));
 				}
 			}
@@ -236,6 +229,7 @@ public class Client extends UnicastRemoteObject
 			else if (cmd.contains("Get")){
 				String fname = cmd.split(" ")[1];
 				open_file(fname,"r");
+				getFile(fname);
 			}
 			else if (cmd.contains("List")){
 				String fname = cmd.split(" ")[1];
