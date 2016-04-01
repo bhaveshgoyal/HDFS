@@ -8,7 +8,7 @@ public interface INameNode extends Remote{
 	byte[] openFile(byte[] inp) throws RemoteException;
 	
 	/* CloseFileResponse closeFile(CloseFileRequest) */
-//	byte[] closeFile(byte[] inp ) throws RemoteException;
+	byte[] closeFile(byte[] inp ) throws RemoteException;
 	
 	/* BlockLocationResponse getBlockLocations(BlockLocationRequest) */
 	/* Method to get block locations given an array of block numbers */

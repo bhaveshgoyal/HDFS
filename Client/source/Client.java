@@ -107,7 +107,16 @@ public class Client extends UnicastRemoteObject
 				}
 				byteChunkPart = null;
 			}
-			BufferedWriter out = null;
+
+            CloseFileRequest.Builder closereq = CloseFileRequest.newBuilder();
+            closereq.setHandle(handle);
+            CloseFileResponse closeresp = CloseFileResponse.parseFrom(namenode.closeFile(closereq.build().toByteArray()));
+            if (closeresp.getStatus() < 0)
+                System.out.println("Error: Could not close the file");
+            else
+                System.out.println("File Successfully Closed after writing");
+
+	/*		BufferedWriter out = null;
 	                FileWriter fstream = new FileWriter("file_config.txt",true); //true tells to append data.
         	        out = new BufferedWriter(fstream);
 			out.write(inputFile+"\n");
@@ -118,7 +127,7 @@ public class Client extends UnicastRemoteObject
 				out.write(String.valueOf(temp.get(l))+"\n");
 			}
 			out.close();
-			inputStream.close();
+			inputStream.close();*/
 			return;
 		} catch (Exception e) {
 			System.out.println("Error: Could not write File to HDFS: " + e.getMessage());
@@ -147,7 +156,7 @@ public class Client extends UnicastRemoteObject
 	public static void getFile(String file_name)
          {
 		try{
-		BufferedReader br = new BufferedReader(new FileReader("file_config.txt"));
+		BufferedReader br = new BufferedReader(new FileReader("file_config"));
 		String line;
 		int status = 0;
 		int num_blocks = 0;

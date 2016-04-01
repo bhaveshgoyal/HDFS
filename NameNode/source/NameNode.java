@@ -18,12 +18,14 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 	private HashMap<String, List<String>> dn_map;
 	private HashMap<Integer, String> handle_map;
 	private HashMap<Integer, ArrayList<Integer>> block_list;
+    private static HashMap<String, ArrayList<Integer>> file_blocks_map;
 	static Random random_gen;
 
 	public NameNode() throws RemoteException {
 		random_gen = new Random();
 		handle_map = new HashMap<Integer, String>();
 		dn_map = new HashMap<String, List<String>>();
+        file_blocks_map = new HashMap<String, ArrayList<Integer>>();
 		block_list = new HashMap<Integer, ArrayList<Integer>>();
 	}
 
@@ -34,17 +36,29 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 			OpenFileRequest filerequest = OpenFileRequest.parseFrom(array);
 			if (filerequest.getForRead() == false){
 				handle = f_handle;
-				OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
-				file_resp.setHandle(handle);
-				handle_map.put(handle, filerequest.getFileName());
-				file_resp.setStatus(1);
-				resp = file_resp.build();
-				f_handle += 1;
-			}
-		}
-		catch (Exception e){
-			System.out.println("Error parsing file Open Request: " + e.getMessage());
-			OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
+                OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
+                file_resp.setHandle(handle);
+                handle_map.put(handle, filerequest.getFileName());
+                file_resp.setStatus(1);
+                resp = file_resp.build();
+                f_handle += 1;
+            }
+            else{   
+                handle = f_handle;
+                OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
+                file_resp.setHandle(handle);
+                handle_map.put(handle, filerequest.getFileName());
+                file_resp.setStatus(1);
+                for(int i : file_blocks_map.get(filerequest.getFileName()))
+                    file_resp.addBlockNums(i);
+                resp = file_resp.build();
+                f_handle += 1;
+            }
+
+        }
+        catch (Exception e){
+            System.out.println("Error parsing file Open Request: " + e.getMessage());
+            OpenFileResponse.Builder file_resp = OpenFileResponse.newBuilder();
 			file_resp.setHandle(handle);
 			file_resp.setStatus(-1);
 			resp = file_resp.build();
@@ -53,6 +67,37 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 		return resp.toByteArray();
 
 	}
+
+    public byte[] closeFile(byte[] array){
+        try{   
+            CloseFileRequest closereq = CloseFileRequest.parseFrom(array);
+
+            File config_report = new File("file_config");
+            FileWriter write_file = new FileWriter("file_config", true);
+            BufferedWriter buffer = new BufferedWriter(write_file);
+            String fname = (String)handle_map.get(closereq.getHandle());
+            List<Integer> blocks = file_blocks_map.get(fname);
+
+            CloseFileResponse.Builder closeresp = CloseFileResponse.newBuilder();
+            buffer.write(fname);
+            buffer.newLine();
+            buffer.write(blocks.size());
+            for(int i : blocks) {
+                buffer.write(Integer.toString(i));
+                buffer.newLine();
+            }
+            buffer.close();
+            closeresp.setStatus(1);
+            return closeresp.build().toByteArray();
+        }catch(Exception e){
+            CloseFileResponse.Builder closeresp = CloseFileResponse.newBuilder();
+            closeresp.setStatus(-1);
+            System.out.println("Error: Could not close the file " + e.getMessage());
+            e.printStackTrace();
+            return closeresp.build().toByteArray();
+        }
+    }
+
 	public byte[] assignBlock(byte[] array){
 		AssignBlockResponse resp = null;
 		try{
@@ -80,14 +125,20 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 				}
 				dnodes_num--;
 				BlockLocations.Builder bloc_build= BlockLocations.newBuilder();
-				bloc_build.setBlockNumber(BLOCK_NUM++);
+				bloc_build.setBlockNumber(BLOCK_NUM);
 				for(int i=0;i<CASCADE_NUM;i++){
 					int idx = random_gen.nextInt(dnodes_num) + 1;
 					DataNodeLocation.Builder dnode_build = DataNodeLocation.newBuilder();
 					dnode_build.setIp(((List)dn_map.get(idx + "")).get(0) + "");
 					dnode_build.setPort(Integer.parseInt(((List)dn_map.get(idx + "")).get(1) + ""));
+                    if (file_blocks_map.get(handle_map.get(assignreq.getHandle())) != null)
+                        file_blocks_map.get(handle_map.get(assignreq.getHandle())).add(BLOCK_NUM);
+                    else
+                        file_blocks_map.put(handle_map.get(assignreq.getHandle()), new ArrayList<Integer>(Arrays.asList(BLOCK_NUM)));
+
 					bloc_build.addLocations(dnode_build.build());	
 				}
+                BLOCK_NUM += 1;
 				AssignBlockResponse.Builder assignresp = AssignBlockResponse.newBuilder();
 				assignresp.setStatus(1);
 				assignresp.setNewBlock(bloc_build.build());
@@ -191,11 +242,14 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 				if(block_list.containsKey(block_id))
 				{
 					temp = block_list.get(block_id);
-				}
 				if(!temp.contains(node_id))
 				{
 					temp.add(node_id);
 				}
+				}
+                else{
+                    temp.add(node_id);
+                }
 				block_list.put(block_id,temp);
 
 			}
@@ -236,17 +290,31 @@ public class NameNode extends UnicastRemoteObject implements INameNode
 			HeartBeatResponse array_response = hb_response.build();
 			return array_response.toByteArray();
 		}
-	}
-	public static void main(String args[]){
-		try{	
-			System.out.println("NameNode Server Running running@" + host + "...");
-			NameNode obj = new NameNode();
-			Naming.rebind("NameNode", obj);
-		}
-		catch (Exception e){
-			System.out.println("NameNode err" + e.getMessage());
-			e.printStackTrace();
-		}
+    }
+    public static void main(String args[]){
+        try{	
+            System.out.println("NameNode Server Running running@" + host + "...");
+            NameNode obj = new NameNode();
+            Naming.rebind("NameNode", obj);
+            BufferedReader buffer = new BufferedReader(new FileReader("file_config"));
+            String line, fname;
+            fname = "";
+            line = buffer.readLine();
+            while (line  != null) {
+                int total_blocks;
+                fname = line;
+                total_blocks = Integer.parseInt(buffer.readLine());
+                ArrayList<Integer> blocks = new ArrayList<Integer>();
+                for(int i=0;i<total_blocks;i++)
+                    blocks.add(Integer.parseInt(buffer.readLine()));
+                file_blocks_map.put(fname, blocks);
+                line = buffer.readLine();
+            }
+        }
+            catch (Exception e){
+                System.out.println("NameNode err" + e.getMessage());
+                e.printStackTrace();
+            }
 
 	}
 
