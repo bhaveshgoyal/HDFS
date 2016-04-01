@@ -12,7 +12,8 @@ import com.google.protobuf.ByteString;
 
 public class DataNode extends UnicastRemoteObject implements IDataNode
 {	
-	static String host = "54.254.144.108";
+	static String host = "54.169.52.137";
+	static String self_ip = "52.77.224.138";
 	static Registry registry;
 	static int port = 1099;
 	static int block_num;
@@ -30,7 +31,7 @@ public class DataNode extends UnicastRemoteObject implements IDataNode
 		{
 			try{
 				DataNodeLocation.Builder dnl = DataNodeLocation.newBuilder();
-				dnl.setIp(host);
+				dnl.setIp(self_ip);
 				dnl.setPort(port);
 				while(true){
 					BlockReportRequest.Builder brr = BlockReportRequest.newBuilder();
@@ -44,9 +45,7 @@ public class DataNode extends UnicastRemoteObject implements IDataNode
 					while(line!=null)
 					{
 						System.out.println(line);
-						String[] temp;
-						temp = line.split(" ");
-						brr.addBlockNumbers(Integer.parseInt(temp[0]));
+						brr.addBlockNumbers(Integer.parseInt(line));
 						line = bufferedReader.readLine();
 					}
 					BlockReportResponse brr_response = BlockReportResponse.parseFrom(namenode.blockReport(brr.build().toByteArray()));
