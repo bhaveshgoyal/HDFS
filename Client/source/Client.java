@@ -9,11 +9,12 @@ import com.bagl.protobuf.Hdfs.*;
 import com.google.protobuf.ByteString;
 public class Client extends UnicastRemoteObject
 {	
-	static String nn_host = "54.169.52.137";	
+	static String nn_host = "127.0.0.1";	
 	static INameNode namenode;
 	static int BLOCK_SIZE = 32000000;
 	public Client() throws RemoteException {}
-
+        static String jt_host = "127.0.0.1";
+	static ArrayList<Integer> job_list = new ArrayList<Integer>();
 	public static int open_file(String fname, String op){
 		OpenFileRequest.Builder openfile = OpenFileRequest.newBuilder();
 		OpenFileResponse resp = null;
@@ -213,6 +214,7 @@ public class Client extends UnicastRemoteObject
         }
 	public static void main(String args[]){
 		try{	
+			job_submit("file1","file2","file3","file4",5);
 			namenode = (INameNode)Naming.lookup("//" + nn_host + "/NameNode");
 			Client obj = new Client();
 			Naming.rebind("Client", obj);
@@ -243,5 +245,73 @@ public class Client extends UnicastRemoteObject
 		}
 
 	}
+	public static void job_submit(String mapper, String reducer, String input, String output, Integer num_tasks)
+	{
+		try{
+			JobSubmitRequest.Builder jsr = JobSubmitRequest.newBuilder();
+			jsr.setMapName(mapper);
+			jsr.setReducerName(reducer);
+			jsr.setInputFile(input);
+			jsr.setOutputFile(output);
+			jsr.setNumReduceTasks(num_tasks);
+			IJobTracker jobtracker = (IJobTracker)Naming.lookup("//" + jt_host + "/JobTracker");		
+			JobSubmitResponse jsr_response = JobSubmitResponse.parseFrom(jobtracker.jobSubmit(jsr.build().toByteArray()));
+			if(jsr_response.getStatus() == 0)
+			{
+				System.out.println("Something bad happened while making the job request");
+			}
+			else
+			{
+				int job_id = jsr_response.getJobId();
+				System.out.println("This is the id of the submitted job : " + job_id);
+				job_list.add(job_id);				
+				new job_status_loop().start();
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+			
+	}
+        public static class job_status_loop extends Thread{
+		public void job_status_loop(){}
+		public void run()
+		{
+			try
+			{
+				int job_id = job_list.get(job_list.size()-1);
+				while(true)
+				{
+					JobStatusRequest.Builder jsr = JobStatusRequest.newBuilder();
+					jsr.setJobId(job_id);
+					IJobTracker jobtracker = (IJobTracker)Naming.lookup("//" + jt_host + "/JobTracker");
+					JobStatusResponse jsr_response = JobStatusResponse.parseFrom(jobtracker.getJobStatus(jsr.build().toByteArray()));
+					if(jsr_response.getStatus()==0)
+					{
+						System.out.println("Something bad happened");
+					}
+					else	
+					{
+						if(jsr_response.getJobDone())
+						{
+							System.out.println("The job is finished ");
+							break;
+						}
+						else
+						{
+							System.out.println("The job is still going on");		
+						}			
+					}
+					Thread.sleep(1000);
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
 
 }
+

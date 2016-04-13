@@ -12,12 +12,12 @@ import com.google.protobuf.ByteString;
 
 public class DataNode extends UnicastRemoteObject implements IDataNode
 {	
-	static String host = "54.169.52.137";
-	static String self_ip = "52.77.224.138";
+	static String host = "127.0.0.1";
+	static String self_ip = "127.0.0.1";
 	static Registry registry;
 	static int port = 1099;
 	static int block_num;
-	static INameNode namenode;
+`	static INameNode namenode;
 	static int BLOCK_SIZE = 32*1024*1024;
 	static int HB_TIME = 2000;
 	static int DN_ID;
