@@ -40,6 +40,11 @@ public class JobTracker extends UnicastRemoteObject implements IJobTracker
                 try{
                         HeartBeatRequestMapReduce hb = HeartBeatRequestMapReduce.parseFrom(array);
                         int node_num = hb.getTaskTrackerId();
+                        int slots = hb.getNumMapSlotsFree();
+                        if (slots != 0 ){
+                            System.out.println("MapTask Assigned to : " + hb.getTaskTrackerId());
+                            //TODO Assign first element of waiting MapTasks List to This ID;
+                        } // TODO add condition to check waiting MapTasks
                         System.out.println("Recieved HeartBeat from: " + node_num);
                 }
                 catch (Exception e)

@@ -13,11 +13,21 @@ import java.io.File;
 import java.util.*;
 public class TaskTracker extends UnicastRemoteObject
 {
-	static String host = "127.0.0.1";
+	    static String host = "127.0.0.1";
         static int port = 1099;
+
+        static int MAP_CAP = 2;
+        static int REDUCE_CAP = 2;
+        
         static Registry registry;
-	static IJobTracker jobtracker;
-        public TaskTracker() throws RemoteException {}
+	    static IJobTracker jobtracker;
+        ExecutorService map_execs, reduce_execs;
+        public TaskTracker() throws RemoteException {
+        
+            map_execs = Executors.newFixedThreadPool(MAP_CAP);
+            reduce_execs = Executors.newFixedThreadPool(REDUCE_CAP);
+        
+        }
         public static void main(String args[]){
                 try{
 			registry = LocateRegistry.getRegistry(host, port);
@@ -41,8 +51,8 @@ public class TaskTracker extends UnicastRemoteObject
 				while(true){
                          	        HeartBeatRequestMapReduce.Builder hbr = HeartBeatRequestMapReduce.newBuilder();
                                    	hbr.setTaskTrackerId(1);
-					hbr.setNumMapSlotsFree(1);
-					hbr.setNumReduceSlotsFree(1);
+					hbr.setNumMapSlotsFree(MAP_CAP - map_execs.getActiveCount());
+					hbr.setNumReduceSlotsFree(REDUCE_CAP - reduce_execs.getActiveCount());
 					jobtracker.heartBeat(hbr.build().toByteArray());
 					Thread.sleep(1000);
 				}
