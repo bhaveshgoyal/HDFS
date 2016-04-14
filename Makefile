@@ -13,6 +13,11 @@ dn-compile:
 
 client-compile:
 	javac  -cp .:./libs/protobuf-java-2.6.1.jar:./Client/source:./NameNode/source:./DataNode/source -d /bin ./Client/source/Client.java
+tt-compile:
+	javac  -cp .:./libs/protobuf-java-2.6.1.jar:./Client/source:./NameNode/source:./DataNode/source:./TaskTracker/source:./JobTracker/source  -d ./bin ./TaskTracker/source/TaskTracker.java ./TaskTracker/source/MapPool.java
+
+jt-compile:
+	javac  -cp .:./libs/protobuf-java-2.6.1.jar:./Client/source:./NameNode/source:./DataNode/source:./TaskTracker/source:./JobTracker/source  -d ./bin ./JobTracker/source/JobTracker.java ./JobTracker/source/IJobTracker.java
 
 nn-trigger:
 	java  -cp .:./libs/protobuf-java-2.6.1.jar:./bin NameNode

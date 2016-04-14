@@ -1,13 +1,13 @@
 
 
 
-public class MapperThread implements Runnable {
+public class MapPool implements Runnable {
 
 
     private String map_command;
 
-    public MapperThread(String cmd){
-        map_command = cmd
+    public MapPool(String cmd){
+        map_command = cmd;
     }
 
     @Override

@@ -1,3 +1,4 @@
+import com.bagl.protobuf.Hdfs.*;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -11,6 +12,7 @@ import java.rmi.Remote;
 import com.bagl.protobuf.Hdfs.*;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.*;
 public class TaskTracker extends UnicastRemoteObject
 {
 	    static String host = "127.0.0.1";
@@ -21,7 +23,7 @@ public class TaskTracker extends UnicastRemoteObject
         
         static Registry registry;
 	    static IJobTracker jobtracker;
-        ExecutorService map_execs, reduce_execs;
+        static ExecutorService map_execs, reduce_execs;
         public TaskTracker() throws RemoteException {
         
             map_execs = Executors.newFixedThreadPool(MAP_CAP);
@@ -51,8 +53,8 @@ public class TaskTracker extends UnicastRemoteObject
 				while(true){
                          	        HeartBeatRequestMapReduce.Builder hbr = HeartBeatRequestMapReduce.newBuilder();
                                    	hbr.setTaskTrackerId(1);
-					hbr.setNumMapSlotsFree(MAP_CAP - map_execs.getActiveCount());
-					hbr.setNumReduceSlotsFree(REDUCE_CAP - reduce_execs.getActiveCount());
+					hbr.setNumMapSlotsFree(MAP_CAP - ((ThreadPoolExecutor)map_execs).getActiveCount());
+					hbr.setNumReduceSlotsFree(REDUCE_CAP - ((ThreadPoolExecutor)reduce_execs).getActiveCount());
 					jobtracker.heartBeat(hbr.build().toByteArray());
 					Thread.sleep(1000);
 				}
