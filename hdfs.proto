@@ -32,8 +32,7 @@ message WriteBlockResponse {
 message DataNodeLocation {
   optional string ip = 1	;
   optional int32 port = 2;
-
-
+}
 
 message JobSubmitRequest {
   optional string mapName = 1; // Java class, or name of C .so

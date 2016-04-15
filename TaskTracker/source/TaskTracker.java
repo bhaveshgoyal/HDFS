@@ -23,15 +23,13 @@ public class TaskTracker extends UnicastRemoteObject
         
         static Registry registry;
 	    static IJobTracker jobtracker;
-        static ExecutorService map_execs, reduce_execs;
-        public TaskTracker() throws RemoteException {
-        
-            map_execs = Executors.newFixedThreadPool(MAP_CAP);
-            reduce_execs = Executors.newFixedThreadPool(REDUCE_CAP);
-        
-        }
+        static ThreadPoolExecutor map_execs, reduce_execs;
+        public TaskTracker() throws RemoteException {}
+
         public static void main(String args[]){
                 try{
+            map_execs = (ThreadPoolExecutor)Executors.newFixedThreadPool(MAP_CAP);
+            reduce_execs = (ThreadPoolExecutor)Executors.newFixedThreadPool(REDUCE_CAP);
 			registry = LocateRegistry.getRegistry(host, port);
 			final String[] names = registry.list();
 			jobtracker = (IJobTracker)Naming.lookup("//" + host + "/" + "JobTracker");
@@ -53,14 +51,15 @@ public class TaskTracker extends UnicastRemoteObject
 				while(true){
                          	        HeartBeatRequestMapReduce.Builder hbr = HeartBeatRequestMapReduce.newBuilder();
                                    	hbr.setTaskTrackerId(1);
-					hbr.setNumMapSlotsFree(MAP_CAP - ((ThreadPoolExecutor)map_execs).getActiveCount());
-					hbr.setNumReduceSlotsFree(REDUCE_CAP - ((ThreadPoolExecutor)reduce_execs).getActiveCount());
+					hbr.setNumMapSlotsFree(MAP_CAP);
+					hbr.setNumReduceSlotsFree(REDUCE_CAP - reduce_execs.getActiveCount());
 					jobtracker.heartBeat(hbr.build().toByteArray());
 					Thread.sleep(1000);
 				}
 			}
 			catch (Exception e)
 			{
+                e.printStackTrace();
 				System.out.println("Error: Something went bad while sending the Heart Beat: " + e.getMessage());
 			}
 		}

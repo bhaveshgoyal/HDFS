@@ -17,7 +17,7 @@ public class DataNode extends UnicastRemoteObject implements IDataNode
 	static Registry registry;
 	static int port = 1099;
 	static int block_num;
-`	static INameNode namenode;
+	static INameNode namenode;
 	static int BLOCK_SIZE = 32*1024*1024;
 	static int HB_TIME = 2000;
 	static int DN_ID;
