@@ -35,10 +35,13 @@ client-trigger:
 	java  -cp .:./libs/protobuf-java-2.6.1.jar:./bin:./NameNode/bin:./DataNode/bin Client
 
 nn-rmi:
-	cd ./NameNode/bin; rmiregistry &
+	cd ./bin; rmiregistry &
 
 dn-rmi:
-	cd ./DataNode/bin; rmiregistry &
+	cd ./bin; rmiregistry &
+
+jt-rmi:
+	cd ./bin; rmiregistry &
 
 clean:
 	rm -rf Blocks
